@@ -8,6 +8,5 @@ BOT_TOKEN = environ.get("BOT_TOKEN", "5843226951:AAEi-4rmnqU3gQ86Rv0hcuBFLUpdUGR
 LOG_CHANNEL = int(environ.get("LOG_CHANNEL", "-1002073865889"))
 ADMINS = int(environ.get("ADMINS", "1327021082"))
 
-# Warning - Give Db uri in deploy server environment variable, don't give in repo.
-DB_URI = environ.get("DB_URI", "mongodb+srv://poulomig644_db_user:d9MMUd5PsTP5MDFf@cluster0.q5evcku.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0") # Warning - Give Db uri in deploy server environment variable, don't give in repo.
-DB_NAME = environ.get("DB_NAME", "vjlinkchangerbot")
+# TinyDB will store data in a local JSON file.
+DB_FILE = environ.get("DB_FILE", "tinydb_data.json")
