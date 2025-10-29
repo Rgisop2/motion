@@ -1,4 +1,4 @@
-Warningingingingingingter0 os import environ
+from os import environ
 
 API_ID = int(environ.get("API_ID", "6643753"))
 API_HASH = environ.get("API_HASH", "88dfedc7b743512395bbd5153b201102")
