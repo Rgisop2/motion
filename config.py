@@ -9,5 +9,5 @@ LOG_CHANNEL = int(environ.get("LOG_CHANNEL", "-1002073865889"))
 ADMINS = int(environ.get("ADMINS", "1327021082"))
 
 # Warning - Give Db uri in deploy server environment variable, don't give in repo.
-DB_URI = environ.get("DB_URI", "mongodb+srv://Takiusername01:Takiusername01@cluster0.4rb2rl6.mongodb.net/?appName=Cluster0") # Warning - Give Db uri in deploy server environment variable, don't give in repo.
+DB_URI = environ.get("DB_URI", "mongodb+srv://poulomi169691:hello@cluster0.duartfp.mongodb.net/?appName=Cluster0") # Warning - Give Db uri in deploy server environment variable, don't give in repo.
 DB_NAME = environ.get("DB_NAME", "vjlinkchangerbot")
