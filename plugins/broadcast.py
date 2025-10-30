@@ -1,75 +1,67 @@
-from pyrogram.errors import InputUserDeactivated, UserNotParticipant, FloodWait, UserIsBlocked, PeerIdInvalid
-from plugins.database import db
-from pyrogram import Client, filters
-from config import ADMINS
-import asyncio
-import datetime
-import time
-import logging
+from tinydb import TinyDB, Query
+from config import DB_FILE
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+db = TinyDB(DB_FILE)
+users_col = db.table('users')
+channels_col = db.table('channels')
+User = Query()
+Channel = Query()
 
-async def broadcast_messages(user_id, message):
-    try:
-        await message.copy(chat_id=user_id)
-        return True, "Success"
-    except FloodWait as e:
-        await asyncio.sleep(e.value)
-        return await broadcast_messages(user_id, message)
-    except InputUserDeactivated:
-        await db.delete_user(int(user_id))
-        logging.info(f"{user_id}-Removed from Database, since deleted account.")
-        return False, "Deleted"
-    except UserIsBlocked:
-        await db.delete_user(int(user_id))
-        logging.info(f"{user_id} -Blocked the bot.")
-        return False, "Blocked"
-    except PeerIdInvalid:
-        await db.delete_user(int(user_id))
-        logging.info(f"{user_id} - PeerIdInvalid")
-        return False, "Error"
-    except Exception as e:
-        return False, "Error"
+def new_user(id, name):
+    return dict(id=id, name=name, session=None)
 
-
-@Client.on_message(filters.command("broadcast") & filters.user(ADMINS) & filters.reply)
-async def verupikkals(bot, message):
-    users = await db.get_all_users()
-    b_msg = message.reply_to_message
-    sts = await message.reply_text(
-        text='Broadcasting your messages...'
+def new_channel(user_id, channel_id, base_username, interval):
+    return dict(
+        user_id=user_id,
+        channel_id=channel_id,
+        base_username=base_username,
+        interval=interval,
+        is_active=True,
+        last_changed=None,
     )
-    start_time = time.time()
-    total_users = await db.total_users_count()
-    done = 0
-    blocked = 0
-    deleted = 0
-    failed =0
 
-    success = 0
-    async for user in users:
-        if 'id' in user:
-            pti, sh = await broadcast_messages(int(user['id']), b_msg)
-            if pti:
-                success += 1
-            elif pti == False:
-                if sh == "Blocked":
-                    blocked += 1
-                elif sh == "Deleted":
-                    deleted += 1
-                elif sh == "Error":
-                    failed += 1
-            done += 1
-            if not done % 20:
-                await sts.edit(f"Broadcast in progress:\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nBlocked: {blocked}\nDeleted: {deleted}")    
-        else:
-            # Handle the case where 'id' key is missing in the user dictionary
-            done += 1
-            failed += 1
-            if not done % 20:
-                await sts.edit(f"Broadcast in progress:\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nBlocked: {blocked}\nDeleted: {deleted}")    
-    
-    time_taken = datetime.timedelta(seconds=int(time.time()-start_time))
-    await sts.edit(f"Broadcast Completed:\nCompleted in {time_taken} seconds.\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nBlocked: {blocked}\nDeleted: {deleted}")
-  
+def add_user(id, name):
+    users_col.insert(new_user(id, name))
+
+def is_user_exist(id):
+    return bool(users_col.get(User.id == int(id)))
+
+def total_users_count():
+    return len(users_col)
+
+def get_all_users():
+    return users_col.all()
+
+def delete_user(user_id):
+    users_col.remove(User.id == int(user_id))
+
+def set_session(id, session):
+    users_col.update({'session': session}, User.id == int(id))
+
+def get_session(id):
+    user = users_col.get(User.id == int(id))
+    return user.get('session') if user else None
+
+def add_channel(user_id, channel_id, base_username, interval):
+    channels_col.insert(new_channel(user_id, channel_id, base_username, interval))
+
+def get_user_channels(user_id):
+    return channels_col.search((Channel.user_id == int(user_id)) & (Channel.is_active == True))
+
+def get_all_active_channels():
+    return channels_col.search(Channel.is_active == True)
+
+def stop_channel(channel_id):
+    channels_col.update({'is_active': False}, Channel.channel_id == int(channel_id))
+
+def resume_channel(channel_id):
+    channels_col.update({'is_active': True}, Channel.channel_id == int(channel_id))
+
+def delete_channel(channel_id):
+    channels_col.remove(Channel.channel_id == int(channel_id))
+
+def update_last_changed(channel_id, timestamp):
+    channels_col.update({'last_changed': timestamp}, Channel.channel_id == int(channel_id))
+
+def get_channel(channel_id):
+    return channels_col.get(Channel.channel_id == int(channel_id))
