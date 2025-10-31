@@ -25,7 +25,7 @@ class LinkChanger:
         """Change the channel's public link with random suffix"""
         try:
             # Create client from user session
-            from config import API_ID, API_HASH
+
             client = Client(":memory:", session_string=user_session, api_id=API_ID, api_hash=API_HASH)
             await client.connect()
             
@@ -66,10 +66,6 @@ class LinkChanger:
             await log_client.stop()
             return False, "Could not find available username after 5 attempts"
         except Exception as e:
-            try:
-                await log_client.stop()
-            except:
-                pass
             return False, str(e)
 
     async def start_channel_rotation(self, user_id, channel_id, base_username, interval):
@@ -103,10 +99,6 @@ class LinkChanger:
             self.active_tasks[task_key] = task
             return True, "Channel rotation started"
         except Exception as e:
-            try:
-                await log_client.stop()
-            except:
-                pass
             return False, str(e)
 
     async def stop_channel_rotation(self, user_id, channel_id):
@@ -121,10 +113,6 @@ class LinkChanger:
             del self.active_tasks[task_key]
             return True, "Channel rotation stopped"
         except Exception as e:
-            try:
-                await log_client.stop()
-            except:
-                pass
             return False, str(e)
 
     async def resume_channel_rotation(self, user_id, channel_id, base_username, interval):
@@ -136,3 +124,4 @@ class LinkChanger:
         return await db.get_user_channels(user_id)
 
 link_changer = LinkChanger()
+                    
